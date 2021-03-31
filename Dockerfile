@@ -1,4 +1,4 @@
-FROM debian:jessie
+FROM debian:buster-slim
 
 # Create user rtorrent
 RUN useradd -m -s /bin/bash rtorrent && echo rtorrent:new_password | chpasswd

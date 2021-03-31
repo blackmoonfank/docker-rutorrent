@@ -44,38 +44,38 @@ RUN \
 	sox \
 	unrar \
 	zip && \
- echo "**** install pip packages ****" && \
- pip3 install --no-cache-dir -U \
+  echo "**** install pip packages ****" && \
+  pip3 install --no-cache-dir -U \
 	cfscrape \
 	cloudscraper && \
- echo "**** install rutorrent ****" && \
- if [ -z ${RUTORRENT_RELEASE+x} ]; then \
+  echo "**** install rutorrent ****" && \
+  if [ -z ${RUTORRENT_RELEASE+x} ]; then \
 	RUTORRENT_RELEASE=$(curl -sX GET "https://api.github.com/repos/Novik/ruTorrent/releases/latest" \
 	| awk '/tag_name/{print $4;exit}' FS='[""]'); \
- fi && \
- curl -o \
- /tmp/rutorrent.tar.gz -L \
+  fi && \
+  curl -o \
+  /tmp/rutorrent.tar.gz -L \
 	"https://github.com/Novik/rutorrent/archive/${RUTORRENT_RELEASE}.tar.gz" && \
- mkdir -p \
+  mkdir -p \
 	/app/rutorrent \
 	/defaults/rutorrent-conf && \
- tar xf \
- /tmp/rutorrent.tar.gz -C \
+  tar xf \
+  /tmp/rutorrent.tar.gz -C \
 	/app/rutorrent --strip-components=1 && \
- mv /app/rutorrent/conf/* \
+  mv /app/rutorrent/conf/* \
 	/defaults/rutorrent-conf/ && \
- rm -rf \
+  rm -rf \
 	/defaults/rutorrent-conf/users && \
- echo "**** patch snoopy.inc for rss fix ****" && \
- cd /app/rutorrent/php && \
- patch < /defaults/patches/snoopy.patch && \
- echo "**** cleanup ****" && \
- apk del --purge \
+  echo "**** patch snoopy.inc for rss fix ****" && \
+  cd /app/rutorrent/php  && \
+#  patch < /defaults/patches/snoopy.patch && \
+  echo "**** cleanup ****" && \
+  apk del --purge \
 	build-dependencies && \
- rm -rf \
-	/etc/nginx/conf.d/default.conf \
-	/root/.cache \
-	/tmp/*
+  rm -rf 
+#	/etc/nginx/conf.d/default.conf \
+#	/root/.cache \
+#	/tmp/*
 
 # add local files
 COPY root/ /

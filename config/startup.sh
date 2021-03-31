@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 ########## Rtorrent-LXC Container ###########
 # Author: Patrick Kerwood @ LinuxBloggen.dk #

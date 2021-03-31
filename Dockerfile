@@ -1,85 +1,71 @@
-FROM nginx:alpine
+FROM debian:jessie
 
-# set version label
-ARG BUILD_DATE
-ARG VERSION
-ARG RUTORRENT_RELEASE
+# Create user rtorrent
+RUN useradd -m -s /bin/bash rtorrent && echo rtorrent:new_password | chpasswd
 
-LABEL build_version="Blackmoonfank version:- ${VERSION} Build-date:- ${BUILD_DATE}"
-LABEL maintainer Nurul Furqon Rohmat Syah <furqon.pstt@gmail.com>
+# Install all dependencies
+RUN apt-get update && apt-get -y install openssl git apache2 apache2-utils build-essential libsigc++-2.0-dev \
+	libcurl4-openssl-dev automake libtool libcppunit-dev libncurses5-dev libapache2-mod-scgi \
+	php5 php5-curl php5-cli libapache2-mod-php5 tmux unzip libssl-dev curl
 
-# copy patches
-COPY patches/ /defaults/patches/
+# Compile xmlrpc-c
+RUN cd /tmp \
+	&& curl -L http://sourceforge.net/projects/xmlrpc-c/files/Xmlrpc-c%20Super%20Stable/1.33.18/xmlrpc-c-1.33.18.tgz/download -o xmlrpc-c.tgz \
+	&& tar zxvf xmlrpc-c.tgz \
+	&& mv xmlrpc-c-1.* xmlrpc \
+	&& cd xmlrpc \
+	&& ./configure --disable-cplusplus \
+	&& make \
+	&& make install \
+	&& cd ..
 
-RUN \
- echo "**** install build packages ****" && \
- apk add --no-cache --virtual=build-dependencies \
-	g++ \
-	libffi-dev \
-	openssl-dev \
-	patch \
-	py3-pip \
-	python3-dev && \
- echo "**** install runtime packages ****" && \
- apk add --no-cache --upgrade \
-	bind-tools \
-	curl \
-	fcgi \
-	ffmpeg \
-	geoip \
-	gzip \
-	libffi \
-	mediainfo \
-	openssl \
-	php7 \
-	php7-cgi \
-	php7-curl \
-	php7-pear \
-	php7-zip \
-	procps \
-	py3-requests \
-	python3 \
-	rtorrent \
-	screen \
-	sox \
-	unrar \
-	zip && \
-  echo "**** install pip packages ****" && \
-  pip3 install --no-cache-dir -U \
-	cfscrape \
-	cloudscraper && \
-  echo "**** install rutorrent ****" && \
-  if [ -z ${RUTORRENT_RELEASE+x} ]; then \
-	RUTORRENT_RELEASE=$(curl -sX GET "https://api.github.com/repos/Novik/ruTorrent/releases/latest" \
-	| awk '/tag_name/{print $4;exit}' FS='[""]'); \
-  fi && \
-  curl -o \
-  /tmp/rutorrent.tar.gz -L \
-	"https://github.com/Novik/rutorrent/archive/${RUTORRENT_RELEASE}.tar.gz" && \
-  mkdir -p \
-	/app/rutorrent \
-	/defaults/rutorrent-conf && \
-  tar xf \
-  /tmp/rutorrent.tar.gz -C \
-	/app/rutorrent --strip-components=1 && \
-  mv /app/rutorrent/conf/* \
-	/defaults/rutorrent-conf/ && \
-  rm -rf \
-	/defaults/rutorrent-conf/users && \
-  echo "**** patch snoopy.inc for rss fix ****" && \
-  cd /app/rutorrent/php  && \
-#  patch < /defaults/patches/snoopy.patch && \
-  echo "**** cleanup ****" && \
-  apk del --purge \
-	build-dependencies && \
-  rm -rf 
-#	/etc/nginx/conf.d/default.conf \
-#	/root/.cache \
-#	/tmp/*
+# Compile libtorrent
+RUN cd /tmp \
+	&& curl -L http://rtorrent.net/downloads/libtorrent-0.13.6.tar.gz -o libtorrent.tar.gz \
+	&& tar -zxvf libtorrent.tar.gz \
+	&& cd libtorrent-0.13.6 \
+	&& ./autogen.sh \
+	&& ./configure \
+	&& make \
+	&& make install \
+	&& cd ..
 
-# add local files
-COPY root/ /
+# Compile rtorrent
+RUN cd /tmp \
+	&& curl -L http://rtorrent.net/downloads/rtorrent-0.9.6.tar.gz -o rtorrent.tar.gz \
+	&& tar -zxvf rtorrent.tar.gz \
+	&& cd rtorrent-0.9.6 \
+	&& ./autogen.sh \
+	&& ./configure --with-xmlrpc-c \
+	&& make \
+	&& make install \
+	&& cd .. \
+	&& ldconfig \
+	&& mkdir /home/rtorrent/rtorrent-session \
+	&& mkdir /downloads \
+	&& mkdir /watch
 
-# ports and volumes
-EXPOSE 80
-VOLUME /config /downloads
+# Install Rutorrent
+RUN cd /tmp \
+	&& curl -L http://dl.bintray.com/novik65/generic/rutorrent-3.6.tar.gz -o rutorrent-3.6.tar.gz \
+	&& tar -zxvf rutorrent-3.6.tar.gz \
+	&& rm -f /var/www/html/index.html \
+	&& mv -f rutorrent/* /var/www/html/ \
+	&& chown -R www-data.www-data /var/www/html/* \
+	&& chmod -R 775 /var/www/html/*
+	
+COPY /config/apache/000-default.conf /etc/apache2/sites-available/
+COPY /config/apache/000-default-auth.conf /etc/apache2/sites-available/
+COPY config/rutorrent/rtorrent.rc /home/rtorrent/.rtorrent.rc
+COPY plugins/ /var/www/html/plugins/
+COPY /config/startup.sh /
+
+RUN cd /var/www/html/plugins/theme/themes \
+	&& sh -c "$(curl -fsSL https://raw.githubusercontent.com/exetico/FlatUI/master/install.sh)"
+
+RUN chown -R www-data.www-data /var/www/html \
+	&& chown rtorrent.rtorrent /home/rtorrent/.rtorrent.rc /home/rtorrent/rtorrent-session /downloads /watch
+
+VOLUME ["/downloads", "/watch"]
+
+ENTRYPOINT ["/startup.sh"]

@@ -10,7 +10,7 @@ RUN apt-key add apt.gpg
 RUN echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php7.list
 RUN apt-get update && apt-get -y install openssl git apache2 apache2-utils build-essential libsigc++-2.0-dev \
 	libcurl4-openssl-dev automake libtool libcppunit-dev libncurses5-dev libapache2-mod-scgi \
-	php7.4 php7.4-curl php7.4-cli libapache2-mod-php7.4 tmux unzip libssl-dev curl
+	php7.4 php7.4-curl php7.4-cli libapache2-mod-php7.4 tmux unzip libssl-dev curl zlib1g-dev
 
 # Compile xmlrpc-c
 RUN cd /tmp \

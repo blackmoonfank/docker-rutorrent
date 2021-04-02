@@ -10,7 +10,8 @@ RUN apt-key add apt.gpg
 RUN echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php7.list
 RUN apt-get update && apt-get -y install openssl git apache2 apache2-utils build-essential libsigc++-2.0-dev \
 	libcurl4-openssl-dev automake libtool libcppunit-dev libncurses5-dev libapache2-mod-scgi \
-	php7.4 php7.4-curl php7.4-cli libapache2-mod-php7.4 tmux unzip libssl-dev curl zlib1g-dev pkgconfig gcc
+	php7.4 php7.4-curl php7.4-cli libapache2-mod-php7.4 tmux unzip libssl-dev curl zlib1g-dev gcc 
+	#pkgconfig gcc
 
 # Compile xmlrpc-c
 RUN cd /tmp \
@@ -70,6 +71,8 @@ RUN cd /var/www/html/plugins/theme/themes \
 
 RUN chown -R www-data.www-data /var/www/html \
 	&& chown rtorrent.rtorrent /home/rtorrent/.rtorrent.rc /home/rtorrent/rtorrent-session /downloads /watch
+
+EXPOSE 80 5000 51001 6881
 
 VOLUME ["/downloads", "/watch"]
 

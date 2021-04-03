@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+    rutorrent:
+        image: linuxserver/rutorrent
+        deploy:
+            replicas: 1
+        ports:
+            - 8080:80
+            - 5000:5000
+            - 51413:51413
+            - 6881:6881/udp
+        environment:
+            - PUID:1000
+            - PGID:1000

@@ -17,3 +17,8 @@ services:
         environment:
             - PUID:1000
             - PGID:1000
+        volumes:
+          - name:  rutorrent
+          - type: bind
+          - source: /mnt/rutorrent
+        

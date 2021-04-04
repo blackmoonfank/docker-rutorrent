@@ -18,7 +18,8 @@ services:
             - PUID:1000
             - PGID:1000
         volumes:
-          - name:  rutorrent
-          - type: bind
-          - source: /mnt/rutorrent
-        
+            - /mnt/rutorrent/config:/config
+            - /mnt/rutorrent/donwloads:/downloads
+            
+
+

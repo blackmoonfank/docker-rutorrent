@@ -1,23 +1,19 @@
-FROM debian:buster-slim
+FROM debian:jessie
 
 # Create user rtorrent
 RUN useradd -m -s /bin/bash rtorrent && echo rtorrent:new_password | chpasswd
 
-# Install all dependencies
-RUN apt-get update && apt-get -y install curl wget gnupg2 ca-certificates lsb-release apt-transport-https
-RUN wget https://packages.sury.org/php/apt.gpg
-RUN apt-key add apt.gpg
-RUN echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php7.list
-RUN apt-get update && apt-get -y install openssl git apache2 apache2-utils build-essential libsigc++-2.0-dev \
-	libcurl4-openssl-dev automake libtool libcppunit-dev libncurses5-dev libapache2-mod-scgi \
-	php7.4 php7.4-curl php7.4-cli libapache2-mod-php7.4 tmux unzip libssl-dev curl zlib1g-dev
+#Install xmlrpc-c
+RUN apt-get update 
+RUN apt-get install -y curl gcc make
+#--no-install-recommends
 
 # Compile xmlrpc-c
-RUN cd /tmp \
-	&& curl -L https://sourceforge.net/projects/xmlrpc-c/files/Xmlrpc-c%20Super%20Stable/1.51.07/xmlrpc-c-1.51.07.tgz/download -o xmlrpc-c.tgz \
-	&& tar zxvf xmlrpc-c.tgz \
-	&& mv xmlrpc-c-1.* xmlrpc \
-	&& cd xmlrpc \
+RUN cd /tmp 
+RUN	curl -L https://sourceforge.net/projects/xmlrpc-c/files/Xmlrpc-c%20Super%20Stable/1.51.07/xmlrpc-c-1.51.07.tgz/download -o xmlrpc-c.tgz 
+RUN	tar zxvf xmlrpc-c.tgz 
+RUN	mv xmlrpc-c-1.* xmlrpc 
+RUN	cd xmlrpc \
 	&& ./configure --disable-cplusplus \
 	&& make \
 	&& make install \

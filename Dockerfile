@@ -5,7 +5,7 @@ RUN useradd -m -s /bin/bash rtorrent && echo rtorrent:new_password | chpasswd
 
 #Install xmlrpc-c
 RUN apt-get update 
-RUN apt-get install -y curl gcc make
+RUN apt-get install -y curl gcc automake make
 #--no-install-recommends
 
 # Compile xmlrpc-c
@@ -18,6 +18,10 @@ RUN	cd xmlrpc \
 	&& make \
 	&& make install \
 	&& cd ..
+
+
+RUN apt-get install -y libtool g++ libz-dev libcppunit-dev pkg-config openssl build-essential libsigc++-2.0-dev \
+	libcurl4-openssl-dev automake libtool libcppunit-dev libncurses5-dev  libssl-dev
 
 # Compile libtorrent
 RUN cd /tmp \
@@ -45,6 +49,8 @@ RUN cd /tmp \
 	&& mkdir /downloads \
 	&& mkdir /watch
 
+RUN apt-get install -y nginx
+
 # Install Rutorrent
 RUN cd /tmp \
 	&& curl -L http://dl.bintray.com/novik65/generic/rutorrent-3.6.tar.gz -o rutorrent-3.6.tar.gz \
@@ -59,6 +65,8 @@ COPY /config/apache/000-default-auth.conf /etc/apache2/sites-available/
 COPY config/rutorrent/rtorrent.rc /home/rtorrent/.rtorrent.rc
 COPY plugins/ /var/www/html/plugins/
 COPY /config/startup.sh /
+
+RUN apt-get install -y git 
 
 RUN cd /var/www/html/plugins/theme/themes \
 	&& sh -c "$(curl -fsSL https://raw.githubusercontent.com/exetico/FlatUI/master/install.sh)"
